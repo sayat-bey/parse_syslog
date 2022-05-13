@@ -2,13 +2,4 @@
 __pycache__/**
 logs/**
 devices.yaml
-mac_bs.yaml
-mac_bs_backup.yaml
-mac_bs_all.yaml
-*.csv
-*.xlsx
-<<<<<<< HEAD
-=======
-mac_bs (2019).yaml
->>>>>>> e8df3f1fe7e4f5ec3947b6a7948218e6984bf65f
 psw.yaml
