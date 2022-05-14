@@ -123,24 +123,30 @@ def write_logs(devices, current_time, log_folder, settings):
     log_count_per_day = log_folder / f"{current_time}_logs_per_day_summary.txt"
     logs = log_folder / f"{current_time}_logs_per_day_brief.txt"
     last_logs_summary = log_folder / f"{current_time}_last_logs_summary.txt"
+    severity_logs_summ = log_folder / f"{current_time}_last_severity_logs_summary.txt"
 
     conn_msg_file = open(conn_msg, "w")
     device_info_file = open(device_info, "w")
     log_count_per_day_file = open(log_count_per_day, "w")
     logs_file = open(logs, "w")
     last_logs_summary_file = open(last_logs_summary, "w")
+    severity_logs_summ_file = open(severity_logs_summ, "w")
 
     period = 21     # last 21 days period
     last_days, year = generate_last_days_list(period)   
     last_logs_summary_file.write(f"summary logs for last {period} days period\n\n\n")
+    severity_logs_summ_file.write(f"summary severity logs for last {period} days period\n\n\n")
     last_logs_summary_file.write(f"hostname,{','.join(last_days)},summary\n")
+    severity_logs_summ_file.write(f"hostname,{','.join(last_days)},summary\n")
+
     logs_summary_all_devs_per_day = []
 
     for device in devices:
         if device.connection_status:
             export_device_info(device, device_info_file)  # export device info: show, status, etc
-            logs_summary_per_day_str, logs_summary_per_day_int = export_last_logs_summary(device, last_days, year)
+            logs_summary_per_day_str, logs_summary_per_day_int, output_severity = export_last_logs_summary(device, last_days, year)
             last_logs_summary_file.write(f"{device.hostname},{logs_summary_per_day_str}\n")
+            severity_logs_summ_file.write(f"{device.hostname},{output_severity}\n")
             logs_summary_all_devs_per_day.append(logs_summary_per_day_int)
 
             for d, d_count in device.log_count_per_day.items():
@@ -166,6 +172,7 @@ def write_logs(devices, current_time, log_folder, settings):
     log_count_per_day_file.close()
     logs_file.close()
     last_logs_summary_file.close()
+    severity_logs_summ_file.close()
 
     if all([dev.connection_status is True for dev in devices]):
         conn_msg.unlink()
@@ -210,8 +217,6 @@ def log_parse(device):
     # 000136: (Jul  1) (2021) (02:35:56.665) ALA: (%LINEPROTO-5-UPDOWN): Line protocol on In
     pattern2 = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
     # 000070: (Apr 21) (2022) (02:37:19.435) ALA: (The VLAN 4093 will be internally used for this clock port.)
-    check_pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d+")
-    # 02:35:56
     pattern_without_year = re.compile(r"(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
     # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
 
@@ -219,12 +224,10 @@ def log_parse(device):
     logs_per_day = {}       # day : logs-count
     day_logs_count = {}     # year {day: {log : count}}
     log_count = 0
-    log_count_check = 0
     
     for line in device.show_log.splitlines():
         match = re.search(pattern, line)
         match2 = re.search(pattern2, line)
-        match_check = re.search(check_pattern, line)
         match_without_year = re.search(pattern_without_year, line)
 
         if match:
@@ -263,13 +266,12 @@ def log_parse(device):
             logs_per_day_count_summary(day, logs_per_day)   
             logs_per_day_count_brief(year, day, log, day_logs_count)      
 
-        if match_check:
-            log_count_check += 1
-            
+    logs_quantity = check_logs_quantity(device)
+    
     if log_count == 0:
         print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log_count = 0")
-    if log_count_check - log_count > 1:
-        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error {log_count_check} vs {log_count}")
+    if logs_quantity - log_count > 6:
+        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error: {logs_quantity}-{log_count}= {logs_quantity - log_count}")
         
     device.logs_formatted = logs
     device.logs_formatted_count = day_logs_count
@@ -278,21 +280,17 @@ def log_parse(device):
 
 def xr_log_parse(device):
     pattern = re.compile(r"(\d{4}) +(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: \S+ (%\S+)")
-    # RP/0/RSP0/CPU0:2021 Aug  3 11:32:55.412 ALA: pwr_mgmt[392]: %PLATFORM-PWR_MGMT-4-MODULE_WARNING : Power-module 0/PS0/M0/SP warning condition cleared
-    check_pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d+")
-    # 02:35:56
+    # RP/0/RSP0/CPU0:(2021) (Aug  3) (11:32:55.412) ALA: pwr_mgmt[392]: (%PLATFORM-PWR_MGMT-4-MODULE_WARNING) : Power-module 0/PS0/M0/SP warning condition cleared
     pattern_without_year = re.compile(r"(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
     # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
     
     logs = {}               # {year : {day : {time : log}}}
-    logs_per_day = {}   # day : logs-count
+    logs_per_day = {}       # day : logs-count
     day_logs_count = {}     # year {day: {log : count}}
     log_count = 0
-    log_count_check = 0
     
     for line in device.show_log.splitlines():
         match = re.search(pattern, line)
-        match_check = re.search(check_pattern, line)
         match_without_year = re.search(pattern_without_year, line)
 
         if match:
@@ -319,13 +317,13 @@ def xr_log_parse(device):
             logs_per_day_count_summary(day, logs_per_day)   
             logs_per_day_count_brief(year, day, log, day_logs_count)  
 
-        if match_check:
-            log_count_check += 1
     
+    logs_quantity = check_logs_quantity(device)
+
     if log_count == 0:
         print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log_count = 0")
-    if log_count_check - log_count > 1:
-        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error {log_count_check} vs {log_count}")
+    if logs_quantity - log_count > 6:
+        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error: {logs_quantity}-{log_count}= {logs_quantity - log_count}")
         
     device.logs_formatted = logs
     device.logs_formatted_count = day_logs_count
@@ -336,7 +334,17 @@ def logs_to_dict(yr, dy, tm, lg, lgs):
 
     if lgs.get(yr):
         if lgs[yr].get(dy):
-            lgs[yr][dy][tm] = lg
+            if lgs[yr][dy].get(tm):
+                i = 1
+                while True:
+                    tm_final = f"{tm}-{i}"    # 18:45:24.699-1
+                    if lgs[yr][dy].get(tm_final):
+                        i += 1
+                    else:
+                        lgs[yr][dy][tm_final] = lg
+                        break
+            else:
+                lgs[yr][dy][tm] = lg
         else:
             lgs[yr][dy] = {tm: lg}
     else:
@@ -367,21 +375,47 @@ def logs_per_day_count_brief(yr, dy, lg, lgs):
 
 def export_last_logs_summary(dv, dys, yr):
     output = [] # dy1, dy2, ..., summary
+    output_severity = []
     logs_summary = 0
+    logs_sev_summary = 0
 
     for dy in dys:
         if yr in dv.logs_formatted:
             if dy in dv.logs_formatted[yr]:
-                log_number =  len(dv.logs_formatted[yr][dy])
-                logs_summary += log_number
-                output.append(log_number)
+                log_quantity =  len(dv.logs_formatted[yr][dy])
+                severity_quantity = define_high_severity(dv, yr, dy)
+
+                logs_summary += log_quantity
+                logs_sev_summary += severity_quantity
+
+                output.append(log_quantity)
+                output_severity.append(severity_quantity)
             else:
                 output.append(0)
+                output_severity.append(0)
 
     output.append(logs_summary)
+    output_severity.append(logs_sev_summary)
     output_str = ",".join((str(i) for i in output))
+    output_severity_str = ",".join((str(i) for i in output_severity))
     
-    return output_str, output
+    return output_str, output, output_severity_str
+
+
+def define_high_severity(dv, yr, dy):
+
+    severity_high = ("-1-", "-2-")
+    severity = ("-3-", "-4-", "-5-")
+    severity_count = 0
+
+    for lg in dv.logs_formatted[yr][dy].values():
+        if any(i in lg for i in severity_high):
+            severity_count += 1
+            print(f"{dv.hostname:23}{dv.ip_address:16}High severity {dy}: {lg}")
+        elif any(i in lg for i in severity):
+            severity_count += 1
+    
+    return severity_count
 
 
 def generate_last_days_list(xdys):
@@ -407,8 +441,20 @@ def summary_all_devs_per_day(logs_summary_lists, pr):
         for logs_list in logs_summary_lists:
             output[i] += logs_list[i]
 
-    output_str = ",".join(output)
+    output_str = ",".join((str(i) for i in output))
     return output_str
+
+
+def check_logs_quantity(dv):
+    lgs_quantity = 0
+    for line in dv.show_log.splitlines():
+        if line != "\n" and line != "":
+            lgs_quantity += 1
+
+        if "Log Buffer" in line:  # Log Buffer (1024000 bytes):
+            lgs_quantity = 0
+
+    return lgs_quantity
 
 
 #######################################################################################
