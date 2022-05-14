@@ -120,18 +120,29 @@ def write_logs(devices, current_time, log_folder, settings):
 
     conn_msg = log_folder / f"{current_time}_connection_error_msg.txt"
     device_info = log_folder / f"{current_time}_device_info.txt"
-    log_count_per_day = log_folder / f"{current_time}_log_count_per_day.txt"
-    logs = log_folder / f"{current_time}_logs.txt"
+    log_count_per_day = log_folder / f"{current_time}_logs_per_day_summary.txt"
+    logs = log_folder / f"{current_time}_logs_per_day_brief.txt"
+    last_logs_summary = log_folder / f"{current_time}_last_logs_summary.txt"
 
     conn_msg_file = open(conn_msg, "w")
     device_info_file = open(device_info, "w")
     log_count_per_day_file = open(log_count_per_day, "w")
     logs_file = open(logs, "w")
+    last_logs_summary_file = open(last_logs_summary, "w")
+
+    period = 21     # last 21 days period
+    last_days, year = generate_last_days_list(period)   
+    last_logs_summary_file.write(f"summary logs for last {period} days period\n\n\n")
+    last_logs_summary_file.write(f"hostname,{','.join(last_days)},summary\n")
+    logs_summary_all_devs_per_day = []
 
     for device in devices:
         if device.connection_status:
             export_device_info(device, device_info_file)  # export device info: show, status, etc
-            
+            logs_summary_per_day_str, logs_summary_per_day_int = export_last_logs_summary(device, last_days, year)
+            last_logs_summary_file.write(f"{device.hostname},{logs_summary_per_day_str}\n")
+            logs_summary_all_devs_per_day.append(logs_summary_per_day_int)
+
             for d, d_count in device.log_count_per_day.items():
                 log_count_per_day_file.write(f"{device.hostname},{d},{str(d_count)}\n")
             
@@ -146,11 +157,18 @@ def write_logs(devices, current_time, log_folder, settings):
             conn_msg_file.write(f"### {device.hostname} : {device.ip_address} ###\n\n")
             conn_msg_file.write(f"{device.connection_error_msg}\n")
             unavailable_device.append(f"{device.hostname} : {device.ip_address}")
-            
+    
+    summary_all = summary_all_devs_per_day(logs_summary_all_devs_per_day, period)
+    last_logs_summary_file.write(f"summary:,{summary_all}\n")     
+
     conn_msg_file.close()
     device_info_file.close()
     log_count_per_day_file.close()
     logs_file.close()
+    last_logs_summary_file.close()
+
+    if all([dev.connection_status is True for dev in devices]):
+        conn_msg.unlink()
 
     return failed_conn_count
 
@@ -187,22 +205,28 @@ def export_device_info(dev, export_file):
 
 
 def log_parse(device):
-    pattern = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\S+)(?: \w*)?: +(%\S+)")
+    pattern = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(%\S+)")
     # 000054: (May  6) (2022) (16:57:09.303): (%SSH-5-ENABLED): SSH 2.0 has been enabled
     # 000136: (Jul  1) (2021) (02:35:56.665) ALA: (%LINEPROTO-5-UPDOWN): Line protocol on In
-    check_pattern = re.compile(r"\d\d:\d\d:\d\d")
+    pattern2 = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
+    # 000070: (Apr 21) (2022) (02:37:19.435) ALA: (The VLAN 4093 will be internally used for this clock port.)
+    check_pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d+")
     # 02:35:56
+    pattern_without_year = re.compile(r"(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
+    # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
 
     logs = {}               # {year : {day : {time : log}}}
+    logs_per_day = {}       # day : logs-count
     day_logs_count = {}     # year {day: {log : count}}
-    logs_per_day = {}
     log_count = 0
     log_count_check = 0
     
-    
     for line in device.show_log.splitlines():
         match = re.search(pattern, line)
+        match2 = re.search(pattern2, line)
         match_check = re.search(check_pattern, line)
+        match_without_year = re.search(pattern_without_year, line)
+
         if match:
             log_count += 1
             
@@ -211,38 +235,41 @@ def log_parse(device):
             time = match[3]
             log = match[4]
             
-            if logs.get(year):
-                if logs[year].get(day):
-                    logs[year][day][time] = log
-                else:
-                    logs[year][day] = {time: log}
-            else:
-                logs[year] = {day: {time: log}}
-                
-            if logs_per_day.get(day):
-                logs_per_day[day] += 1
-            else:
-                logs_per_day[day] = 1
+            logs_to_dict(year, day, time, log, logs)
+            logs_per_day_count_summary(day, logs_per_day)   
+            logs_per_day_count_brief(year, day, log, day_logs_count)   
 
-            if day_logs_count.get(year):
-                if day_logs_count[year].get(day):
-                    if day_logs_count[year][day].get(log):
-                        day_logs_count[year][day][log] += 1
-                    else:
-                        day_logs_count[year][day][log] = 1
-                else:
-                    day_logs_count[year][day] = {log: 1}                
-            else:
-                day_logs_count[year] = {day: {log: 1}}
-        
+        elif match2:
+            log_count += 1
+            
+            day = match2[1]
+            year = match2[2]
+            time = match2[3]
+            log = match2[4]
+            
+            logs_to_dict(year, day, time, log, logs)
+            logs_per_day_count_summary(day, logs_per_day)   
+            logs_per_day_count_brief(year, day, log, day_logs_count)   
+
+        elif match_without_year:
+            log_count += 1
+
+            day = match_without_year[1]
+            year = "unknown"
+            time = match_without_year[2]
+            log = match_without_year[3]
+
+            logs_to_dict(year, day, time, log, logs)
+            logs_per_day_count_summary(day, logs_per_day)   
+            logs_per_day_count_brief(year, day, log, day_logs_count)      
+
         if match_check:
             log_count_check += 1
             
-            
     if log_count == 0:
         print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log_count = 0")
-    if log_count != log_count_check:
-        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error")
+    if log_count_check - log_count > 1:
+        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error {log_count_check} vs {log_count}")
         
     device.logs_formatted = logs
     device.logs_formatted_count = day_logs_count
@@ -250,20 +277,24 @@ def log_parse(device):
 
 
 def xr_log_parse(device):
-    pattern = re.compile(r"(\d{4}) +(\w{3} +\d{1,2}) +(\S+)(?: \w*)?: \S+ (%\S+)")
+    pattern = re.compile(r"(\d{4}) +(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: \S+ (%\S+)")
     # RP/0/RSP0/CPU0:2021 Aug  3 11:32:55.412 ALA: pwr_mgmt[392]: %PLATFORM-PWR_MGMT-4-MODULE_WARNING : Power-module 0/PS0/M0/SP warning condition cleared
-    check_pattern = re.compile(r"\d\d:\d\d:\d\d")
+    check_pattern = re.compile(r"\d{2}:\d{2}:\d{2}\.\d+")
     # 02:35:56
-
+    pattern_without_year = re.compile(r"(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
+    # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
+    
     logs = {}               # {year : {day : {time : log}}}
+    logs_per_day = {}   # day : logs-count
     day_logs_count = {}     # year {day: {log : count}}
-    logs_per_day = {}
     log_count = 0
     log_count_check = 0
     
     for line in device.show_log.splitlines():
         match = re.search(pattern, line)
         match_check = re.search(check_pattern, line)
+        match_without_year = re.search(pattern_without_year, line)
+
         if match:
             log_count += 1
             
@@ -271,46 +302,113 @@ def xr_log_parse(device):
             year = match[1]
             time = match[3]
             log = match[4]
-            
-            if logs.get(year):
-                if logs[year].get(day):
-                    logs[year][day][time] = log
-                else:
-                    logs[year][day] = {time: log}
-            else:
-                logs[year] = {day: {time: log}}
-                
-            if logs_per_day.get(day):
-                logs_per_day[day] += 1
-            else:
-                logs_per_day[day] = 1
 
-            if day_logs_count.get(year):
-                if day_logs_count[year].get(day):
-                    if day_logs_count[year][day].get(log):
-                        day_logs_count[year][day][log] += 1
-                    else:
-                        day_logs_count[year][day][log] = 1
-                else:
-                    day_logs_count[year][day] = {log: 1}                
-            else:
-                day_logs_count[year] = {day: {log: 1}}
-    
+            logs_to_dict(year, day, time, log, logs)
+            logs_per_day_count_summary(day, logs_per_day)   
+            logs_per_day_count_brief(year, day, log, day_logs_count)           
+
+        elif match_without_year:
+            log_count += 1
+
+            day = match_without_year[1]
+            year = "unknown"
+            time = match_without_year[2]
+            log = match_without_year[3]
+
+            logs_to_dict(year, day, time, log, logs)
+            logs_per_day_count_summary(day, logs_per_day)   
+            logs_per_day_count_brief(year, day, log, day_logs_count)  
+
         if match_check:
             log_count_check += 1
     
     if log_count == 0:
         print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log_count = 0")
-    if log_count != log_count_check:
-        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error")
+    if log_count_check - log_count > 1:
+        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error {log_count_check} vs {log_count}")
         
     device.logs_formatted = logs
     device.logs_formatted_count = day_logs_count
     device.log_count_per_day = logs_per_day
 
 
+def logs_to_dict(yr, dy, tm, lg, lgs):
+
+    if lgs.get(yr):
+        if lgs[yr].get(dy):
+            lgs[yr][dy][tm] = lg
+        else:
+            lgs[yr][dy] = {tm: lg}
+    else:
+        lgs[yr] = {dy: {tm: lg}}    
 
 
+def logs_per_day_count_summary(dy, lgs):
+
+    if lgs.get(dy):
+        lgs[dy] += 1
+    else:
+        lgs[dy] = 1
+
+
+def logs_per_day_count_brief(yr, dy, lg, lgs):   
+
+    if lgs.get(yr):
+        if lgs[yr].get(dy):
+            if lgs[yr][dy].get(lg):
+                lgs[yr][dy][lg] += 1
+            else:
+                lgs[yr][dy][lg] = 1
+        else:
+            lgs[yr][dy] = {lg: 1}                
+    else:
+        lgs[yr] = {dy: {lg: 1}}
+
+
+def export_last_logs_summary(dv, dys, yr):
+    output = [] # dy1, dy2, ..., summary
+    logs_summary = 0
+
+    for dy in dys:
+        if yr in dv.logs_formatted:
+            if dy in dv.logs_formatted[yr]:
+                log_number =  len(dv.logs_formatted[yr][dy])
+                logs_summary += log_number
+                output.append(log_number)
+            else:
+                output.append(0)
+
+    output.append(logs_summary)
+    output_str = ",".join((str(i) for i in output))
+    
+    return output_str, output
+
+
+def generate_last_days_list(xdys):
+    # last xdys days period: 21 days
+    now = datetime.now()
+    year = now.strftime("%Y")   # 2022
+    day_period = []     # days list in cisco format May  1, May 20
+
+    for i in reversed(range(xdys)):
+        dy = now - timedelta(days = i)
+        dy1 = dy.strftime("%b %d")
+        dy2 = dy1.split() 
+        dy3 = f"{dy2[0]}{dy2[1].lstrip('0'):>3}"
+        
+        day_period.append(dy3)
+
+    return day_period, year
+
+
+def summary_all_devs_per_day(logs_summary_lists, pr):
+    output = [0 for a in range(pr)]
+    for i in range(pr):
+        for logs_list in logs_summary_lists:
+            output[i] += logs_list[i]
+
+    output_str = ",".join(output)
+    return output_str
 
 
 #######################################################################################
