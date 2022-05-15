@@ -210,15 +210,14 @@ def export_device_info(dev, export_file):
 # ------------------------------ get bs port -----------------------------------------#
 #######################################################################################
 
-
 def log_parse(device):
     pattern = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(%\S+)")
-    # 000054: (May  6) (2022) (16:57:09.303): (%SSH-5-ENABLED): SSH 2.0 has been enabled
-    # 000136: (Jul  1) (2021) (02:35:56.665) ALA: (%LINEPROTO-5-UPDOWN): Line protocol on In
+        # 000054: (May  6) (2022) (16:57:09.303): (%SSH-5-ENABLED): SSH 2.0 has been enabled
+        # 000136: (Jul 11) (2021) (02:35:56.665) ALA: (%LINEPROTO-5-UPDOWN): Line protocol on In
     pattern2 = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
-    # 000070: (Apr 21) (2022) (02:37:19.435) ALA: (The VLAN 4093 will be internally used for this clock port.)
+        # 000070: (Apr 21) (2022) (02:37:19.435) ALA: (The VLAN 4093 will be internally used for this clock port.)
     pattern_without_year = re.compile(r"(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
-    # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
+        # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
 
     logs = {}               # {year : {day : {time : log}}}
     logs_per_day = {}       # day : logs-count
@@ -322,7 +321,7 @@ def xr_log_parse(device):
 
     if log_count == 0:
         print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log_count = 0")
-    if logs_quantity - log_count > 6:
+    if logs_quantity - log_count > 1:
         print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error: {logs_quantity}-{log_count}= {logs_quantity - log_count}")
         
     device.logs_formatted = logs
@@ -378,12 +377,19 @@ def export_last_logs_summary(dv, dys, yr):
     output_severity = []
     logs_summary = 0
     logs_sev_summary = 0
+    log_alarm = {}  # alarm log for high severity
 
-    for dy in dys:
+    for dy in dys:    
         if yr in dv.logs_formatted:
             if dy in dv.logs_formatted[yr]:
                 log_quantity =  len(dv.logs_formatted[yr][dy])
-                severity_quantity = define_high_severity(dv, yr, dy)
+                severity_quantity, dy_log_alarm = define_high_severity(dv, yr, dy)
+                if dy_log_alarm:
+                    for i in dy_log_alarm:
+                        if log_alarm.get(i):
+                            log_alarm[i].append(dy)
+                        else:
+                            log_alarm[i] = [dy]
 
                 logs_summary += log_quantity
                 logs_sev_summary += severity_quantity
@@ -393,6 +399,10 @@ def export_last_logs_summary(dv, dys, yr):
             else:
                 output.append(0)
                 output_severity.append(0)
+
+    if log_alarm:
+        for k,v in log_alarm.items():
+            print(f"{dv.hostname:23}{dv.ip_address:16}high severity {k}:  {', '.join(v)}")
 
     output.append(logs_summary)
     output_severity.append(logs_sev_summary)
@@ -405,17 +415,19 @@ def export_last_logs_summary(dv, dys, yr):
 def define_high_severity(dv, yr, dy):
 
     severity_high = ("-1-", "-2-")
-    severity = ("-3-", "-4-", "-5-")
+    severity = ("-3-")
     severity_count = 0
+    lg_alarm = []
 
     for lg in dv.logs_formatted[yr][dy].values():
         if any(i in lg for i in severity_high):
             severity_count += 1
-            print(f"{dv.hostname:23}{dv.ip_address:16}High severity {dy}: {lg}")
+            if lg not in lg_alarm:
+                lg_alarm.append(lg)
         elif any(i in lg for i in severity):
             severity_count += 1
     
-    return severity_count
+    return severity_count, lg_alarm
 
 
 def generate_last_days_list(xdys):
