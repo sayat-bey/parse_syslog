@@ -251,7 +251,7 @@ def log_parse(device):
     if log_count == 0:
         print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log_count = 0")
     if logs_quantity - log_count > 6:
-        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error: {logs_quantity}-{log_count} = {logs_quantity - log_count}")
+        print(f"{device.hostname:23}{device.ip_address:16}[ERROR] log match error (all/matched): {logs_quantity}-{log_count} = {logs_quantity - log_count}")
         
     device.logs_formatted = logs
     device.logs_formatted_brief = logs_brief
