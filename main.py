@@ -32,6 +32,7 @@ class CellSiteGateway:
 
         self.logs_formatted = {}
         self.logs_formatted_brief = {}
+        self.logs_formatted_detailed = {}
 
     def show_commands(self):
         self.show_log = self.ssh_conn.send_command(r"show logging")
@@ -123,12 +124,14 @@ def write_logs(devices, current_time, log_folder, settings):
     logs = log_folder / f"{current_time}_logs_per_day_brief.txt"
     last_logs_summary = log_folder / f"{current_time}_last_logs_summary.txt"
     severity_logs_summ = log_folder / f"{current_time}_last_severity_logs_summary.txt"
+    logs_sfp = log_folder / f"{current_time}_logs_sfp_removed.txt"
 
     conn_msg_file = open(conn_msg, "w")
     device_info_file = open(device_info, "w")
     logs_file = open(logs, "w")
     last_logs_summary_file = open(last_logs_summary, "w")
     severity_logs_summ_file = open(severity_logs_summ, "w")
+    logs_sfp_file = open(logs_sfp, "w")
 
     period = 21     # last 21 days period
     xdays_summ_last_row = []
@@ -139,6 +142,8 @@ def write_logs(devices, current_time, log_folder, settings):
     severity_logs_summ_file.write(f"summary severity logs for last {period} days period\n\n\n")
     last_logs_summary_file.write(f"hostname,{','.join(last_days)},summary\n")
     severity_logs_summ_file.write(f"hostname,{','.join(last_days)},summary\n")
+    logs_sfp_file.write(f"logs when sfp removed for last {period} days period\n\n\n")
+
 
     for device in devices:
         if device.connection_status:
@@ -151,7 +156,13 @@ def write_logs(devices, current_time, log_folder, settings):
             for year, year_value in device.logs_formatted_brief.items():
                 for day, day_value in year_value.items():
                     for log, log_value in day_value.items():
-                        logs_file.write(f"{device.hostname},{year},{day},{log},{str(log_value)}\n")            
+                        logs_file.write(f"{device.hostname},{year},{day},{log},{str(log_value)}\n")    
+
+            logs_sfp = check_logs_sfp(device, last_days, year)
+            if logs_sfp:
+                for i in logs_sfp:
+                    logs_sfp_file.write(f"{i}\n")
+
         else:
             failed_conn_count += 1
             conn_msg_file.write("-" * 80 + "\n")
@@ -167,6 +178,7 @@ def write_logs(devices, current_time, log_folder, settings):
     logs_file.close()
     last_logs_summary_file.close()
     severity_logs_summ_file.close()
+    logs_sfp_file.close()
 
     if all([dev.connection_status is True for dev in devices]):
         conn_msg.unlink()
@@ -202,18 +214,20 @@ def log_parse(device):
     pattern = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(%\S+)")
         # 000054: (May  6) (2022) (16:57:09.303): (%SSH-5-ENABLED): SSH 2.0 has been enabled
         # 000136: (Jul 11) (2021) (02:35:56.665) ALA: (%LINEPROTO-5-UPDOWN): Line protocol on In
-    pattern2 = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
+    pattern_detailed_log = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
         # 000070: (Apr 21) (2022) (02:37:19.435) ALA: (The VLAN 4093 will be internally used for this clock port.)
     pattern_without_year = re.compile(r"(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
         # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
 
-    logs = {}               # {year : {day : {time : log}}}
-    logs_brief = {}     # year {day: {log : count}}
+    logs = {}               # year : {day : {time : log}}
+    logs_detailed = {}      # year : {day : {time : log_detailed}}
+    logs_brief = {}         # year : {day : {log : count}}
     log_count = 0
     
     for line in device.show_log.splitlines():
         match = re.search(pattern, line)
-        match2 = re.search(pattern2, line)
+        match2 = re.search(pattern_detailed_log, line)
+        match_detailed = re.search(pattern_detailed_log, line)
         match_without_year = re.search(pattern_without_year, line)
 
         if match:
@@ -244,7 +258,15 @@ def log_parse(device):
             log = match_without_year[3]
 
             logs_to_dict(year, day, time, log, logs)  
-            logs_to_dict_brief(year, day, log, logs_brief)      
+            logs_to_dict_brief(year, day, log, logs_brief)
+
+        if  match_detailed:
+            day = match_detailed[1]
+            year = match_detailed[2]
+            time = match_detailed[3]
+            log = match_detailed[4]
+
+            logs_to_dict(year, day, time, log, logs_detailed)
 
     logs_quantity = check_logs_quantity(device)
     
@@ -259,17 +281,21 @@ def log_parse(device):
 
 def xr_log_parse(device):
     pattern = re.compile(r"(\d{4}) +(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: \S+ (%\S+)")
-    # RP/0/RSP0/CPU0:(2021) (Aug  3) (11:32:55.412) ALA: pwr_mgmt[392]: (%PLATFORM-PWR_MGMT-4-MODULE_WARNING) : Power-module 0/PS0/M0/SP warning condition cleared
+        # RP/0/RSP0/CPU0:(2021) (Aug  3) (11:32:55.412) ALA: pwr_mgmt[392]: (%PLATFORM-PWR_MGMT-4-MODULE_WARNING) : Power-module warning
     pattern_without_year = re.compile(r"(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
-    # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
+        # *(Jan  2) (00:00:03.503): (LIC: :License level: AdvancedMetroIPAccess  License type: Permanent)
+    pattern_detailed_log = re.compile(r"(\d{4}) +(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
+        # RP/0/RSP0/CPU0:(2021) (Aug  3) (11:32:55.412) ALA: (pwr_mgmt[392]: %PLATFORM-PWR_MGMT-4-MODULE_WARNING : Power-module warning)
     
-    logs = {}           # {year : {day : {time : log}}}
-    logs_brief = {}     # year {day: {log : count}}
+    logs = {}               # year : {day : {time : log}}
+    logs_detailed = {}      # year : {day : {time : log_detailed}}
+    logs_brief = {}         # year : {day : {log : count}}
     log_count = 0
     
     for line in device.show_log.splitlines():
         match = re.search(pattern, line)
         match_without_year = re.search(pattern_without_year, line)
+        match_detailed = re.search(pattern_detailed_log, line)
 
         if match:
             log_count += 1
@@ -290,6 +316,14 @@ def xr_log_parse(device):
 
             logs_to_dict(year, day, time, log, logs)  
             logs_to_dict_brief(year, day, log, logs_brief)  
+
+        if  match_detailed:
+            day = match_detailed[2]
+            year = match_detailed[1]
+            time = match_detailed[3]
+            log = match_detailed[4]
+
+            logs_to_dict(year, day, time, log, logs_detailed)
 
     logs_quantity = check_logs_quantity(device)
 
@@ -433,10 +467,34 @@ def check_logs_quantity(dv):
 
 
 def check_timestamps(dv):
+    tmstmp = "service timestamps log datetime msec localtime show-timezone year"
+    tmstmpxr = "service timestamps log datetime localtime msec show-timezone year"
 
+    if dv.os_type == "cisco_ios" or dv.os_type == "cisco_xe":
+        if tmstmp not in dv.show_timestamps.splitlines():
+            print(f"{dv.hostname:23}{dv.ip_address:16}[ERROR] check timestamp")
+    
+    elif dv.os_type == "cisco_xr":
+        if tmstmpxr not in dv.show_timestamps.splitlines():
+            print(f"{dv.hostname:23}{dv.ip_address:16}[ERROR] check timestamp")
+    
 
-def logs_sfp(dv):
+def check_logs_sfp(dv, xdays, yr):
+    output = []
 
+    for dy in xdays:    
+        if yr in dv.logs_formatted_detailed:
+            if dy in dv.logs_formatted_detailed[yr]:
+                for lg in dv.logs_formatted_detailed[yr][dy].values():
+                    if "Transceiver module removed" in lg:
+                        output.append(f"{dv.hostname},{yr},{dy},{lg}")
+                    if "is removed" in lg and "xFP" in lg:
+                        output.append(f"{dv.hostname},{yr},{dy},{lg}")
+
+    if output:
+        print(f"{dv.hostname:23}{dv.ip_address:16}[NOTE] xFP is removed (see attached file)")
+
+    return output
 
 
 #######################################################################################
@@ -453,6 +511,7 @@ def connect_device(my_username, my_password, dev_queue, settings):
                                               username=my_username, password=my_password)
                 dev.show_commands()
                 dev.parse(dev)
+                check_timestamps(dev)
 
                 dev.ssh_conn.disconnect()
                 dev_queue.task_done()
