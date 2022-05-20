@@ -163,6 +163,8 @@ def write_logs(devices, current_time, log_folder, settings):
                 for i in logs_sfp:
                     logs_sfp_file.write(f"{i}\n")
 
+            count_mismatched_logs(device, last_days, period)
+            
         else:
             failed_conn_count += 1
             conn_msg_file.write("-" * 80 + "\n")
@@ -396,6 +398,9 @@ def export_last_logs_summary(dv, dys, yr):
             else:
                 output.append(0)
                 output_severity.append(0)
+        else:
+            for j in dys:
+                output.append(0)
 
     if log_alarm:
         for k,v in log_alarm.items():
@@ -495,6 +500,53 @@ def check_logs_sfp(dv, xdays, yr):
         print(f"{dv.hostname:23}{dv.ip_address:16}[NOTE] xFP is removed (see attached file)")
 
     return output
+
+
+def count_mismatched_logs(dv, xdays, xd):
+    unknown_logs = {"last_day": None, "unknown": 0}
+    match_buffer = False
+    pattern = re.compile(r"(\w{3} +\d{1,2}) +(?:\d{4} +)?\d{2}:\d{2}:\d{2}.\d+(?: \w+)?: +(.*)")
+        # RP/0/RSP0/CPU0:2021 (Dec 13) 18:24:08.370 ALA: (isis[1012]: %ROUTING-ISIS-5-ADJCHANGE : Adja)
+        # *(Apr  7) 10:22:38.363: (%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1)
+        # 000014: *(Apr  7) 2022 10:23:09.451 UTC: (%SYS-5-LOG_CONFIG_CHANGE: Buffer)
+
+    for line in dv.show_log.splitlines():
+        if line != "\n" and line != "":
+            if match_buffer:
+                match = re.search(pattern, line)
+                if match:
+                    dy = match[1]
+                    if unknown_logs["last_day"] != dy:
+                        unknown_logs["last_day"] = dy
+                        unknown_logs[dy] = 0
+                else:
+                    if unknown_logs["last_day"]:
+                        lstdy = unknown_logs["last_day"]
+                        unknown_logs[lstdy] += 1
+                    else:
+                         unknown_logs["unknown"] += 1   
+            
+            if "Log Buffer" in line:
+                match_buffer = True
+
+    lgs_before = unknown_logs["unknown"]
+    lgs_all = 0
+
+    for i,j in unknown_logs.items():
+        if i != "last_day":
+            lgs_all += j
+
+    for a,b in unknown_logs.items():
+        if a != "last_day":
+            if a in xdays:
+                break
+            else:
+                lgs_before += b
+
+    lgs_after = lgs_all - lgs_before
+
+    if lgs_all:
+        print(f"{dv.hostname:23}{dv.ip_address:16}[ERROR] mismatched logs (before/after {xd} days): {lgs_before}/{lgs_after}")
 
 
 #######################################################################################
