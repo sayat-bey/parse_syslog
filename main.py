@@ -114,7 +114,7 @@ def get_device_info(csv_file):
     return devs
 
 
-def write_logs(devices, current_time, log_folder, settings):
+def write_logs(devices, current_time, log_folder, settings, xdays, year, prd):
     failed_conn_count = 0
     unavailable_device = []
 
@@ -338,6 +338,13 @@ def xr_log_parse(device):
     device.logs_formatted_brief = logs_brief
 
 
+def fn_find_logs(device, xdays, year):
+
+    pattern = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
+        # 000070: (Apr 21) (2022) (02:37:19.435) ALA: (The VLAN 4093 will be internally used for this clock port.)
+    pattern_xr = re.compile(r"(\d{4}) +(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
+        # RP/0/RSP0/CPU0:(2021) (Aug  3) (11:32:55.412) ALA: (pwr_mgmt[392]: %PLATFORM-PWR_MGMT-4-MODULE_WARNING : Power-module warning)
+
 def logs_to_dict(yr, dy, tm, lg, lgs):
     if lgs.get(yr):
         if lgs[yr].get(dy):
@@ -356,6 +363,27 @@ def logs_to_dict(yr, dy, tm, lg, lgs):
             lgs[yr][dy] = {tm: lg}
     else:
         lgs[yr] = {dy: {tm: lg}}    
+
+
+def fn_logs_to_dict(yr, dy, tm, lg, lgs):
+    if lgs.get(yr):
+        if lgs[yr].get(dy):
+            if lgs[yr][dy].get(tm):
+                i = 1
+                while True:
+                    tm_final = f"{tm}-{i}"    # 18:45:24.699-1
+                    if lgs[yr][dy].get(tm_final):
+                        i += 1
+                    else:
+                        lgs[yr][dy][tm_final] = lg
+                        break
+            else:
+                lgs[yr][dy][tm] = lg
+        else:
+            lgs[yr][dy] = {tm: lg}
+    else:
+        lgs[yr] = {dy: {tm: lg}}
+
 
 
 def logs_to_dict_brief(yr, dy, lg, lgs):   
@@ -431,11 +459,11 @@ def define_high_severity(dv, yr, dy):
     return severity_qnt, hi_severity
 
 
-def generate_last_days_list(xdays):
+def last_days_list(xdays):
     # last xdays days period: 21 days
     now = datetime.now()
     yr = now.strftime("%Y")     # 2022
-    lst_days = []               # days list in cisco format May  1, May 20
+    lst_days = []               # day list in cisco format May  1, May 2,... May N
 
     for i in reversed(range(xdays)):
         dy = now - timedelta(days = i)
@@ -446,6 +474,23 @@ def generate_last_days_list(xdays):
         lst_days.append(dy3)
 
     return lst_days, yr
+
+
+def fn_last_days(prd):
+    # prd: last days period: 21 days
+    now = datetime.now()
+    year = now.strftime("%Y")   # 2022
+    xdays = {}                  # day list in cisco format May  1, May 2,... May N
+
+    for i in reversed(range(prd)):
+        day = now - timedelta(days = i)
+        dayi = day.strftime("%b %d")    # May 01 or May 22
+        dayii = dayi.split()             # May, 01
+        dayiii = f"{dayii[0]}{dayii[1].lstrip('0'):>3}"     # May  1 or May 22
+        
+        xdays[dayiii] = {"mmt_qnt": 0} # timestamp: log, mismatched quantity
+
+    return xdays, year
 
 
 def def_xdays_summ_last_row(logs_summary_lists, pr):
@@ -597,6 +642,9 @@ start_time = datetime.now()
 current_date = start_time.strftime("%Y.%m.%d")
 current_time = start_time.strftime("%H.%M")
 
+prd = 21     # last 21 days period
+xdays, year = fn_last_days(prd) 
+
 log_folder = Path(f"{Path.cwd()}/logs/{current_date}/")  # current dir / logs / date /
 log_folder.mkdir(exist_ok=True)
 
@@ -626,7 +674,7 @@ for device in devices:
 
 q.join()
 
-failed_connection_count = write_logs(devices, current_time, log_folder, settings)
+failed_connection_count = write_logs(devices, current_time, log_folder, settings, xdays, year, prd)
 duration = datetime.now() - start_time
 duration_time = timedelta(seconds=duration.seconds)
 
