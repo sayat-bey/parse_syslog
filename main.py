@@ -1,3 +1,4 @@
+from sqlite3 import Timestamp
 import yaml
 import time
 import queue
@@ -33,6 +34,8 @@ class CellSiteGateway:
         self.logs_formatted = {}
         self.logs_formatted_brief = {}
         self.logs_formatted_detailed = {}
+
+        self.logs_dict = {} # day: {timestamp: log}, unknown logs: qnt
 
     def show_commands(self):
         self.show_log = self.ssh_conn.send_command(r"show logging")
@@ -338,12 +341,53 @@ def xr_log_parse(device):
     device.logs_formatted_brief = logs_brief
 
 
-def fn_find_logs(device, xdays, year):
+def fn_parse_logs(device, xdays, year):
 
     pattern = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
         # 000070: (Apr 21) (2022) (02:37:19.435) ALA: (The VLAN 4093 will be internally used for this clock port.)
     pattern_xr = re.compile(r"(\d{4}) +(\w{3} +\d{1,2}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
         # RP/0/RSP0/CPU0:(2021) (Aug  3) (11:32:55.412) ALA: (pwr_mgmt[392]: %PLATFORM-PWR_MGMT-4-MODULE_WARNING : Power-module warning)
+
+    for line in device.show_log.splitlines():
+        match = re.search(pattern, line)
+        match_xr = re.search(pattern_xr, line)
+
+        if match:
+            date = match[1]
+            log_year = match[2]
+            timestamp = match[3]
+            log = match[4]
+            
+
+        elif match_xr:
+            date = match[2]
+            log_year = match[1]
+            timestamp = match[3]
+            log = match[4]           
+
+
+
+def fn_logs_to_dict(device, xdays, year, date, log_year, timestamp):
+    
+    output = {}
+    if year == log_year:
+        if date in xdays:
+
+            if output.get(date):
+                if output[date].get(timestamp):
+                    i = 1
+                    while True:
+                        tm_final = f"{timestamp}-{i}"    # 18:45:24.699-1
+                        if output[date].get(tm_final):
+                            i += 1
+                        else:
+                            output[date][tm_final] = lg
+                            break
+                else:
+                    output[date][timestamp] = lg
+            else:
+                output[date] = {timestamp: lg}                 
+
 
 def logs_to_dict(yr, dy, tm, lg, lgs):
     if lgs.get(yr):
@@ -476,19 +520,19 @@ def last_days_list(xdays):
     return lst_days, yr
 
 
-def fn_last_days(prd):
-    # prd: last days period: 21 days
+def fn_last_days(period):
+    # period: last days period: 21 days
     now = datetime.now()
     year = now.strftime("%Y")   # 2022
-    xdays = {}                  # day list in cisco format May  1, May 2,... May N
+    xdays = []                  # day list in cisco format May  1, May 2,... May N
 
-    for i in reversed(range(prd)):
+    for i in reversed(range(period)):
         day = now - timedelta(days = i)
         dayi = day.strftime("%b %d")    # May 01 or May 22
         dayii = dayi.split()             # May, 01
         dayiii = f"{dayii[0]}{dayii[1].lstrip('0'):>3}"     # May  1 or May 22
         
-        xdays[dayiii] = {"mmt_qnt": 0} # timestamp: log, mismatched quantity
+        xdays.append(dayiii)
 
     return xdays, year
 
