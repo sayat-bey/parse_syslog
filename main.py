@@ -1,3 +1,4 @@
+from tkinter import X
 import yaml
 import time
 import queue
@@ -90,7 +91,7 @@ def get_device_info(csv_file):
     return devs
 
 
-def write_logs(devices, current_time, log_folder, xdays, year, period):
+def write_logs(devices, current_time, log_folder, xdays, period):
     failed_conn_count = 0
     unavailable_device = []
 
@@ -105,29 +106,20 @@ def write_logs(devices, current_time, log_folder, xdays, year, period):
     logs_sfp_file = open(logs_sfp, "w")
 
     last_logs_summary_file.write(f"summary logs for last {period} days period\n\n\n")
-    last_logs_summary_file.write(f"hostname,{','.join(xdays)},summary\n")
+    last_logs_summary_file.write(f"hostname,{','.join(xdays)},bad_logs_qnt,summary\n")
     logs_sfp_file.write(f"logs when sfp removed for last {period} days period\n\n\n")
 
     for device in devices:
         if device.connection_status:
             export_device_info(device, device_info_file)  # export device info: show, status, etc
-            xdays_summ_str, xdays_summ_int, xdays_severity = export_last_logs_summary(device, xdays, year)
-            last_logs_summary_file.write(f"{device.hostname},{xdays_summ_str}\n")
-            severity_logs_summ_file.write(f"{device.hostname},{xdays_severity}\n")
-            xdays_summ_last_row.append(xdays_summ_int)
+            xdays_summ = fn_export_last_logs_summary(device)
+            last_logs_summary_file.write(f"{device.hostname},{xdays_summ}\n")
 
-            for year, year_value in device.logs_formatted_brief.items():
-                for day, day_value in year_value.items():
-                    for log, log_value in day_value.items():
-                        logs_file.write(f"{device.hostname},{year},{day},{log},{str(log_value)}\n")    
-
-            logs_sfp = check_logs_sfp(device, xdays, year)
+            logs_sfp = fn_check_logs_sfp(device)
             if logs_sfp:
                 for i in logs_sfp:
                     logs_sfp_file.write(f"{i}\n")
-
-            count_mismatched_logs(device, xdays, period)
-            
+  
         else:
             failed_conn_count += 1
             conn_msg_file.write("-" * 80 + "\n")
@@ -140,29 +132,28 @@ def write_logs(devices, current_time, log_folder, xdays, year, period):
     last_logs_summary_file.close()
     logs_sfp_file.close()
 
-    if all([dev.connection_status is True for dev in devices]):
+    if all([i.connection_status is True for i in devices]):
         conn_msg.unlink()
 
     return failed_conn_count
 
 
-def export_device_info(dev, export_file):
+def export_device_info(device, export_file):
     export_file.write("#" * 80 + "\n")
-    export_file.write(f"### {dev.hostname} : {dev.ip_address} ###\n\n")
+    export_file.write(f"### {device.hostname} : {device.ip_address} ###\n\n")
 
     export_file.write("-" * 80 + "\n")
     export_file.write("device.show_log\n\n")
-    export_file.write(dev.show_log)
+    export_file.write(device.show_log)
     export_file.write("\n\n")
    
     export_file.write("-" * 80 + "\n")
-    export_file.write("device.logs_formatted\n\n")
-    export_file.write(pformat(dev.logs_formatted))
+    export_file.write("device.logs_dict\n\n")
+    export_file.write(pformat(device.logs_dict))
     export_file.write("\n\n")
 
-    export_file.write("-" * 80 + "\n")
-    export_file.write("device.logs_formatted_brief\n\n")
-    export_file.write(pformat(dev.logs_formatted_brief))
+    export_file.write(f"device.bad_logs_qnt: {pformat(device.bad_logs_qnt)}\n")
+    export_file.write(f"device.all_logs_qnt: {pformat(device.all_logs_qnt)}\n")
     export_file.write("\n\n")
 
 
@@ -178,6 +169,9 @@ def fn_parse_logs(device, xdays, year):
         # RP/0/RSP0/CPU0:(2021) (Aug  3) (11:32:55.412) ALA: (pwr_mgmt[392]: %PLATFORM-PWR_MGMT-4-MODULE_WARNING : Power-module warning)
 
     log_count = 0
+
+    for x in xdays:
+        device.logs_dict[x] = {}  # day: {timestamp: log}
 
     for line in device.show_log.splitlines():
         match = re.search(pattern, line)
@@ -207,9 +201,6 @@ def fn_parse_logs(device, xdays, year):
 
 def fn_logs_to_dict(device, xdays, year, date, log_year, timestamp, log):
     
-    for i in xdays:
-        device.logs_dict[i] = {}  # day: {timestamp: log}
-
     if year == log_year:
         if date in xdays:
             if device.logs_dict[date].get(timestamp):
@@ -225,7 +216,7 @@ def fn_logs_to_dict(device, xdays, year, date, log_year, timestamp, log):
                 device.logs_dict[date][timestamp] = log
 
 
-def fn_count_bad_logs(device, xdays, year, date, log_year):
+def fn_count_bad_logs(device, xdays, year):
 
     pattern = re.compile(r"(\w{3} +\d{1,2}) +(\d{4}) +(\d{2}:\d{2}:\d{2}.\d+)(?: \w*)?: +(.*)")
         # 000070: (Apr 21) (2022) (02:37:19.435) ALA: (The VLAN 4093 will be internally used for this clock port.)
@@ -259,16 +250,17 @@ def fn_count_bad_logs(device, xdays, year, date, log_year):
 
 def fn_export_last_logs_summary(device):
     output = [] # dy1, dy2, ..., summary
-    summary = 0
+    summary = device.bad_logs_qnt
 
     for day_dict in device.logs_dict.values():
         output.append(len(day_dict))
         summary += len(day_dict)
 
+    output.append(device.bad_logs_qnt)
     output.append(summary)
     output_str = ",".join((str(i) for i in output))
 
-    return output_str, output, 
+    return output_str
 
 
 def fn_define_high_severity(device):
@@ -281,7 +273,7 @@ def fn_define_high_severity(device):
                 output.append(f"{device.hostname},{day},{tms},{log}")
 
     if output:
-        print(f"{device.hostname:23}{device.ip_address:16}[NOTE] xFP is removed (see attached file)")
+        print(f"{device.hostname:23}{device.ip_address:16}[NOTE] high severity log {log}")
 
 
 def fn_last_days(period):
@@ -355,9 +347,11 @@ def connect_device(my_username, my_password, dev_queue, xdays, year):
                 dev.ssh_conn = ConnectHandler(device_type=dev.os_type, ip=dev.ip_address,
                                               username=my_username, password=my_password)
                 dev.show_commands()
-                fn_parse_logs(device, xdays, year)
-                check_timestamps(dev)
-
+                fn_parse_logs(dev, xdays, year)
+                fn_count_bad_logs(dev, xdays, year)
+                fn_count_logs(dev)
+                fn_check_timestamps(dev)
+                fn_define_high_severity(dev)
                 dev.ssh_conn.disconnect()
                 dev_queue.task_done()
                 break
@@ -380,6 +374,32 @@ def connect_device(my_username, my_password, dev_queue, xdays, year):
                     i += 1
                     dev.reset()
                     time.sleep(5)
+
+
+#######################################################################################
+# ------------------------------ test part -------------------------------------------#
+#######################################################################################
+
+def test_connect_dev(dev):
+
+    with open("log_test.txt", "r") as arp:
+        dev.show_log = arp.read()
+    with open("timestamp.txt", "r") as descr:
+        dev.show_timestamps = descr.read()
+    
+
+def test_connect(q, xdays, year):
+    dev = q.get()
+
+    test_connect_dev(dev)
+
+    fn_parse_logs(dev, xdays, year)
+    fn_count_bad_logs(dev, xdays, year)
+    fn_count_logs(dev)
+    fn_check_timestamps(dev)
+    fn_define_high_severity(dev)
+
+    q.task_done()
 
 
 #######################################################################################
@@ -412,7 +432,8 @@ print(
 )
 
 for i in range(20):
-    thread = Thread(target=connect_device, args=(username, password, q, xdays, year))
+    #thread = Thread(target=connect_device, args=(username, password, q, xdays, year))
+    thread = Thread(target=test_connect, args=(q, xdays, year))
     thread.daemon = True
     thread.start()
 
@@ -421,7 +442,7 @@ for device in devices:
 
 q.join()
 
-failed_connection_count = write_logs(devices, current_time, log_folder, xdays, year, period)
+failed_connection_count = write_logs(devices, current_time, log_folder, xdays, period)
 duration = datetime.now() - start_time
 duration_time = timedelta(seconds=duration.seconds)
 

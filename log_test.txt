@@ -1,0 +1,182 @@
+095584: Nov 14 2021 05:18:51.122 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095585: Nov 14 2021 05:18:51.606 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095586: Nov 14 2021 05:18:52.086 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095587: Nov 14 2021 05:18:52.566 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095588: Nov 14 2021 05:18:52.566 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095589: Nov 14 2021 08:28:34.984 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to down
+095590: Nov 14 2021 08:28:34.984 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095591: Nov 14 2021 08:28:34.984 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095592: Nov 14 2021 08:28:34.984 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095593: Nov 14 2021 08:28:34.988 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095594: Nov 14 2021 08:28:34.988 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095595: Nov 14 2021 08:28:34.992 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095596: Nov 14 2021 08:28:34.992 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095597: Nov 14 2021 08:28:34.992 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095598: Nov 14 2021 08:28:35.984 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095599: Nov 14 2021 08:40:42.667 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095600: Nov 14 2021 08:40:43.683 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095601: Nov 14 2021 08:40:44.163 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095602: Nov 14 2021 08:40:44.643 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095603: Nov 14 2021 08:40:45.123 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095604: Nov 14 2021 08:40:45.603 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
+095605: Nov 14 2021 08:40:46.083 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095606: Nov 14 2021 08:40:46.563 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095607: Nov 14 2021 08:40:47.043 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095608: Nov 14 2021 08:40:47.523 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095609: Dec 30 2021 17:50:31.892 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to down
+095610: Dec 30 2021 17:50:31.892 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095611: Dec 30 2021 17:50:31.892 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095612: Dec 30 2021 17:50:31.892 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095613: Dec 30 2021 17:50:31.896 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095614: Dec 30 2021 17:50:31.896 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095615: Dec 30 2021 17:50:31.900 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095616: Dec 30 2021 17:50:31.900 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095617: Dec 30 2021 17:50:31.900 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095618: Dec 30 2021 17:50:32.892 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095619: Dec 30 2021 18:54:13.462 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095620: Dec 30 2021 18:54:13.942 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095621: Dec 30 2021 18:54:14.422 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095622: Dec 30 2021 18:54:14.902 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095623: Dec 30 2021 18:54:15.382 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
+095624: Dec 30 2021 18:54:15.862 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095625: Dec 30 2021 18:54:16.342 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095626: Dec 30 2021 18:54:16.822 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095627: Dec 30 2021 18:54:17.302 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095628: Dec 30 2021 18:54:17.302 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095629: Jan 25 2022 13:09:04.083 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to down
+095630: Jan 25 2022 13:09:04.083 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095631: Jan 25 2022 13:09:04.083 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095632: Jan 25 2022 13:09:04.083 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095633: Jan 25 2022 13:09:04.087 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095634: Jan 25 2022 13:09:04.087 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095635: Jan 25 2022 13:09:04.091 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095636: Jan 25 2022 13:09:04.091 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095637: Jan 25 2022 13:09:04.091 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095638: Jan 25 2022 13:09:05.083 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095639: Jan 25 2022 13:12:35.337 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095640: Jan 25 2022 13:12:36.349 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095641: Jan 25 2022 13:12:36.829 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095642: Jan 25 2022 13:12:37.309 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095643: Jan 25 2022 13:12:37.789 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095644: Jan 25 2022 13:12:38.269 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
+095645: Jan 25 2022 13:12:38.749 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095646: Jan 25 2022 13:12:39.229 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095647: Jan 25 2022 13:12:39.709 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095648: Jan 25 2022 13:12:40.189 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095649: Feb 28 2022 15:15:45.088 ALA: %SYS-5-CONFIG_I: Configured from console by sibraim on vty0 (82.200.149.33)
+095650: May  9 2022 12:20:26.742 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to down
+095651: May  9 2022 12:20:26.742 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095652: May  9 2022 12:20:26.742 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095653: May  9 2022 12:20:26.742 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095654: May  9 2022 12:20:26.746 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095655: May  9 2022 12:20:26.746 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095656: May  9 2022 12:20:26.750 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095657: May  9 2022 12:20:26.750 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095658: May  9 2022 12:20:26.750 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095659: May  9 2022 12:20:27.742 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095660: May  9 2022 15:22:01.040 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095661: May  9 2022 15:22:02.056 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095662: May  9 2022 15:22:02.536 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095663: May  9 2022 15:22:03.016 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095664: May  9 2022 15:22:03.496 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095665: May  9 2022 15:22:03.976 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
+095666: May  9 2022 15:22:04.456 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095667: May  9 2022 15:22:04.936 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095668: May  9 2022 15:22:05.416 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095669: May  9 2022 15:22:05.896 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095670: May 12 2022 15:27:59.794 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to down
+095671: May 12 2022 15:27:59.794 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095672: May 12 2022 15:27:59.794 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095673: May 12 2022 15:27:59.794 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095674: May 12 2022 15:27:59.798 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095675: May 12 2022 15:27:59.798 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095676: May 12 2022 15:27:59.802 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095677: May 12 2022 15:27:59.802 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095678: May 12 2022 15:27:59.802 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095679: May 12 2022 15:28:00.795 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095680: May 12 2022 15:31:23.464 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095681: May 12 2022 15:31:23.944 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095682: May 12 2022 15:31:24.424 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095683: May 12 2022 15:31:24.904 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095684: May 12 2022 15:31:25.384 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
+095685: May 12 2022 15:31:25.864 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095686: May 12 2022 15:31:26.344 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095687: May 12 2022 15:31:26.824 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095688: May 12 2022 15:31:27.304 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095689: May 12 2022 15:31:27.304 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095690: May 12 2022 17:49:52.279 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to down
+095691: May 12 2022 17:49:52.279 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095692: May 12 2022 17:49:52.279 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095693: May 12 2022 17:49:52.279 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095694: May 12 2022 17:49:52.283 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095695: May 12 2022 17:49:52.283 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095696: May 12 2022 17:49:52.287 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095697: May 12 2022 17:49:52.287 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095698: May 12 2022 17:49:52.287 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095699: May 12 2022 17:49:53.279 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095700: May 12 2022 17:52:44.948 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095701: May 12 2022 17:52:45.960 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095702: May 12 2022 17:52:46.440 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095703: May 12 2022 17:52:46.920 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095704: May 12 2022 17:52:47.400 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095705: May 12 2022 17:52:47.880 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
+095706: May 12 2022 17:52:48.360 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095707: May 12 2022 17:52:48.840 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095708: May 12 2022 17:52:49.320 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095709: May 12 2022 17:52:49.800 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095710: May 12 2022 19:18:55.313 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to down
+095711: May 12 2022 19:18:55.313 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095712: May 12 2022 19:18:55.313 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095713: May 12 2022 19:18:55.313 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095714: May 12 2022 19:18:55.317 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095715: May 12 2022 19:18:55.317 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095716: May 12 2022 19:18:55.321 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095717: May 12 2022 19:18:55.321 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095718: May 12 2022 19:18:55.321 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095719: May 12 2022 19:18:56.313 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095720: May 12 2022 19:59:58.628 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095721: May 12 2022 19:59:59.108 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095722: May 12 2022 19:59:59.588 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095723: May 12 2022 20:00:00.068 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095724: May 12 2022 20:00:00.548 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
+095725: May 12 2022 20:00:01.028 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095726: May 12 2022 20:00:01.508 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095727: May 12 2022 20:00:01.988 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095728: May 12 2022 20:00:02.468 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095729: May 12 2022 20:00:02.468 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095730: May 13 2022 12:36:38.991 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to down
+095731: May 13 2022 12:36:38.991 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095732: May 13 2022 12:36:38.991 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095733: May 13 2022 12:36:38.991 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095734: May 13 2022 12:36:38.995 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095735: May 13 2022 12:36:38.995 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095736: May 13 2022 12:36:38.999 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095737: May 13 2022 12:36:38.999 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095738: May 13 2022 12:36:38.999 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095739: May 13 2022 12:36:39.991 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095740: May 13 2022 14:26:55.746 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095741: May 13 2022 14:26:56.762 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095742: May 13 2022 14:26:57.242 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095743: May 13 2022 14:26:57.722 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095744: May 13 2022 14:26:58.202 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095745: May 13 2022 14:26:58.682 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
+095746: May 13 2022 14:26:59.162 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to up
+095747: May 13 2022 14:26:59.642 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to up
+095748: May 13 2022 14:27:00.122 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to up
+095749: May 13 2022 14:27:00.602 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to up
+095750: May 15 2022 17:41:09.654 ALA: %SYS-5-CONFIG_I: Configured from console by sibraim on vty0 (10.244.254.125)
+095731: May 21 2022 12:36:38.991 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to down
+095732: May 21 2022 12:36:38.991 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to down
+095733: May 21 2022 12:36:38.991 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to down
+095734: May 21 2022 12:36:38.995 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to down
+095735: May 21 2022 12:36:38.995 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1002, changed state to down
+095736: May 21 2022 12:36:38.999 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1003, changed state to down
+095737: May 21 2022 12:36:38.999 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1004, changed state to down
+095738: May 21 2022 12:36:38.999 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1005, changed state to down
+095739: May 21 2022 12:36:39.991 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to down
+095740: May 21 2022 14:26:55.746 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/4, changed state to up
+095741: May 21 2022 14:26:56.762 ALA: %LINK-3-UPDOWN: Interface GigabitEthernet0/4, changed state to up
+095742: May 21 2022 14:26:57.242 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan4005, changed state to up
+095743: May 21 2022 14:26:57.722 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan2020, changed state to up
+095744: May 21 2022 14:26:58.202 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1000, changed state to up
+095745: May 21 2022 14:26:58.682 ALA: %LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan1001, changed state to up
