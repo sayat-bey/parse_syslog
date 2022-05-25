@@ -33,6 +33,8 @@ class CellSiteGateway:
         self.logs_dict = {} # day: {timestamp: log}
         self.bad_logs_qnt = 0
         self.all_logs_qnt = 0
+        self.hi_sev_logs = []
+        self.specific_logs = {}
 
     def show_commands(self):
         self.show_log = self.ssh_conn.send_command(r"show logging")
@@ -42,6 +44,8 @@ class CellSiteGateway:
         self.logs_dict = {} # day: {timestamp: log}
         self.bad_logs_qnt = 0
         self.all_logs_qnt = 0
+        self.hi_sev_logs = []
+        self.specific_logs = {}
 
 
 class PaggXR(CellSiteGateway):
@@ -99,15 +103,22 @@ def write_logs(devices, current_time, log_folder, xdays, period):
     device_info = log_folder / f"{current_time}_device_info.txt"
     last_logs_summary = log_folder / f"{current_time}_last_{period}_days_log_summary.txt"
     logs_sfp = log_folder / f"{current_time}_sfp_removed_logs.txt"
+    hi_sev_logs = log_folder / f"{current_time}_high_severity.txt"
 
     conn_msg_file = open(conn_msg, "w")
     device_info_file = open(device_info, "w")
     last_logs_summary_file = open(last_logs_summary, "w")
     logs_sfp_file = open(logs_sfp, "w")
+    hi_sev_logs_file = open(hi_sev_logs, "w")
 
     last_logs_summary_file.write(f"summary logs for last {period} days period\n\n\n")
     last_logs_summary_file.write(f"hostname,{','.join(xdays)},bad_logs_qnt,summary\n")
-    logs_sfp_file.write(f"logs when sfp removed for last {period} days period\n\n\n")
+    logs_sfp_file.write(f"logs when sfp removed for last {period} day period\n\n\n")
+    hi_sev_logs_file.write(f"high severity logs for last {period} day period\n\n\n")
+
+    license_error = []
+    parity_error = []
+    sfp_is_removed = []
 
     for device in devices:
         if device.connection_status:
@@ -119,7 +130,15 @@ def write_logs(devices, current_time, log_folder, xdays, period):
             if logs_sfp:
                 for i in logs_sfp:
                     logs_sfp_file.write(f"{i}\n")
-  
+
+            for j in device.hi_sev_logs:
+                hi_sev_logs_file.write(f"{j}\n")
+
+            if "Feature Gige4portflexi 1.0 count violation" in device.show_log:
+                license_error.append(f"{device.hostname},{device.ip_address}")
+            if "parity error" in device.show_log:
+                parity_error.append(f"{device.hostname},{device.ip_address}")
+
         else:
             failed_conn_count += 1
             conn_msg_file.write("-" * 80 + "\n")
@@ -131,6 +150,21 @@ def write_logs(devices, current_time, log_folder, xdays, period):
     device_info_file.close()
     last_logs_summary_file.close()
     logs_sfp_file.close()
+    hi_sev_logs_file.close()
+
+    if license_error:
+        license_error_logs = log_folder / f"{current_time}_license_error_logs.txt"
+        with open(license_error_logs, "w") as f1:
+            f1.write("devies with license error (Feature Gige4portflexi 1.0 count violation)\n\n\n")
+            for y in license_error:
+                f1.write(f"{y}\n")
+
+    if parity_error:
+        parity_error_logs = log_folder / f"{current_time}_parity_error_logs.txt"
+        with open(parity_error_logs, "w") as f2:
+            f2.write("devies with parity error (parity error)\n\n\n")
+            for z in parity_error:
+                f2.write(f"{z}\n")
 
     if all([i.connection_status is True for i in devices]):
         conn_msg.unlink()
@@ -154,6 +188,7 @@ def export_device_info(device, export_file):
 
     export_file.write(f"device.bad_logs_qnt: {pformat(device.bad_logs_qnt)}\n")
     export_file.write(f"device.all_logs_qnt: {pformat(device.all_logs_qnt)}\n")
+    export_file.write(f"device.hi_sev_logs: {pformat(device.hi_sev_logs)}\n")
     export_file.write("\n\n")
 
 
@@ -188,10 +223,10 @@ def fn_parse_logs(device, xdays, year):
 
         elif match_xr:
             log_count += 1
-            date = match[2]
-            log_year = match[1]
-            timestamp = match[3]
-            log = match[4]           
+            date = match_xr[2]
+            log_year = match_xr[1]
+            timestamp = match_xr[3]
+            log = match_xr[4]           
 
             fn_logs_to_dict(device, xdays, year, date, log_year, timestamp, log)
     
@@ -235,11 +270,11 @@ def fn_count_bad_logs(device, xdays, year):
 
             if log_year == year and not day_matched and date in xdays:
                 day_matched = True
-
+      
         elif match_xr:
-            date = match[2]
-            log_year = match[1]
-          
+            date = match_xr[2]
+            log_year = match_xr[1]
+        
             if log_year == year and not day_matched and date in xdays:
                 day_matched = True
 
@@ -264,16 +299,12 @@ def fn_export_last_logs_summary(device):
 
 
 def fn_define_high_severity(device):
-    severity_high = ("-1-", "-2-", "-3-")
-    output = []
+    severity_high = ("-1-", "-2-")
 
     for day, day_dict in device.logs_dict.items():
         for tms, log in day_dict.items():
             if any(i in log for i in severity_high):
-                output.append(f"{device.hostname},{day},{tms},{log}")
-
-    if output:
-        print(f"{device.hostname:23}{device.ip_address:16}[NOTE] high severity log {log}")
+                device.hi_sev_logs.append(f"{device.hostname},{day},{tms},{log}")
 
 
 def fn_last_days(period):
@@ -432,8 +463,8 @@ print(
 )
 
 for i in range(20):
-    #thread = Thread(target=connect_device, args=(username, password, q, xdays, year))
-    thread = Thread(target=test_connect, args=(q, xdays, year))
+    thread = Thread(target=connect_device, args=(username, password, q, xdays, year))
+    # thread = Thread(target=test_connect, args=(q, xdays, year))
     thread.daemon = True
     thread.start()
 
