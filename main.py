@@ -103,9 +103,7 @@ def write_logs(devices, current_time, log_folder, xdays, period):
     conn_msg = log_folder / f"{current_time}_connection_error_msg.txt"
     device_info = log_folder / f"{current_time}_device_info.txt"
     last_logs_summary = log_folder / f"{current_time}_last_{period}_days_log_summary.txt"
-    logs_sfp = log_folder / f"{current_time}_sfp_removed_logs.txt"
-    hi_sev_logs = log_folder / f"{current_time}_high_severity.txt"
-
+    
     conn_msg_file = open(conn_msg, "w")
     device_info_file = open(device_info, "w")
     last_logs_summary_file = open(last_logs_summary, "w")
@@ -142,27 +140,29 @@ def write_logs(devices, current_time, log_folder, xdays, period):
             conn_msg_file.write(f"{device.connection_error_msg}\n")
             unavailable_device.append(f"{device.hostname} : {device.ip_address}")
 
+    conn_msg_file.close()
+    device_info_file.close()
+    last_logs_summary_file.close()
 
     if sfp_is_removed:
-        print(f"NOTE: check {logs_sfp} file")
+        logs_sfp = log_folder / f"{current_time}_sfp_removed_logs.txt"
+        print(f"\nNOTE: check {logs_sfp} file")
         with open(logs_sfp, "w") as logs_sfp_file:
             logs_sfp_file.write(f"logs when sfp removed for last {period} day period\n\n\n")
             for i in sfp_is_removed:
                 logs_sfp_file.write(f"{i}\n")
 
     if hi_sev_logs_list:
-        print(f"NOTE: check {hi_sev_logs} file")
+        hi_sev_logs = log_folder / f"{current_time}_high_severity.txt"
+        print(f"\nNOTE: check {hi_sev_logs} file")
         with open(hi_sev_logs, "w") as hi_sev_logs_file:
             hi_sev_logs_file.write(f"high severity logs for last {period} day period\n\n\n")
             for i in hi_sev_logs_list:
                 hi_sev_logs_file.write(f"{i}\n")
 
-    conn_msg_file.close()
-    device_info_file.close()
-    last_logs_summary_file.close()
-
     if license_error:
         license_error_logs = log_folder / f"{current_time}_license_error_logs.txt"
+        print(f"\nNOTE: check {license_error_logs} file")
         with open(license_error_logs, "w") as f1:
             f1.write("devies with license error (Feature Gige4portflexi 1.0 count violation)\n\n\n")
             for y in license_error:
@@ -170,6 +170,7 @@ def write_logs(devices, current_time, log_folder, xdays, period):
 
     if parity_error:
         parity_error_logs = log_folder / f"{current_time}_parity_error_logs.txt"
+        print(f"\nNOTE: check {parity_error_logs} file")
         with open(parity_error_logs, "w") as f2:
             f2.write("devies with parity error (parity error)\n\n\n")
             for z in parity_error:
