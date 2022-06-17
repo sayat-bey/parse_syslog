@@ -33,6 +33,7 @@ class CellSiteGateway:
         self.logs_dict = {} # day: {timestamp: log}
         self.bad_logs_qnt = 0
         self.all_logs_qnt = 0
+        self.buffer_size = "error"
         self.hi_sev_logs = []
         self.specific_logs = {}
 
@@ -108,17 +109,14 @@ def write_logs(devices, current_time, log_folder, xdays, period):
     conn_msg_file = open(conn_msg, "w")
     device_info_file = open(device_info, "w")
     last_logs_summary_file = open(last_logs_summary, "w")
-    logs_sfp_file = open(logs_sfp, "w")
-    hi_sev_logs_file = open(hi_sev_logs, "w")
-
+    
     last_logs_summary_file.write(f"summary logs for last {period} days period\n\n\n")
-    last_logs_summary_file.write(f"hostname,{','.join(xdays)},bad_logs_qnt,summary\n")
-    logs_sfp_file.write(f"logs when sfp removed for last {period} day period\n\n\n")
-    hi_sev_logs_file.write(f"high severity logs for last {period} day period\n\n\n")
-
+    last_logs_summary_file.write(f"hostname,{','.join(xdays)},bad_logs_qnt,summary,all_logs_qnt,buffer_size\n")
+    
     license_error = []
     parity_error = []
     sfp_is_removed = []
+    hi_sev_logs_list = []
 
     for device in devices:
         if device.connection_status:
@@ -126,14 +124,12 @@ def write_logs(devices, current_time, log_folder, xdays, period):
             xdays_summ = fn_export_last_logs_summary(device)
             last_logs_summary_file.write(f"{device.hostname},{xdays_summ}\n")
 
-            logs_sfp = fn_check_logs_sfp(device)
-            if logs_sfp:
-                for i in logs_sfp:
-                    logs_sfp_file.write(f"{i}\n")
+            sfp_output = fn_check_logs_sfp(device)
+            sfp_is_removed.extend(sfp_output)
 
             for j in device.hi_sev_logs:
-                hi_sev_logs_file.write(f"{j}\n")
-
+                hi_sev_logs_list.append(j)
+                
             if "Feature Gige4portflexi 1.0 count violation" in device.show_log:
                 license_error.append(f"{device.hostname},{device.ip_address}")
             if "parity error" in device.show_log:
@@ -145,12 +141,25 @@ def write_logs(devices, current_time, log_folder, xdays, period):
             conn_msg_file.write(f"### {device.hostname} : {device.ip_address} ###\n\n")
             conn_msg_file.write(f"{device.connection_error_msg}\n")
             unavailable_device.append(f"{device.hostname} : {device.ip_address}")
-    
+
+
+    if sfp_is_removed:
+        print(f"NOTE: check {logs_sfp} file")
+        with open(logs_sfp, "w") as logs_sfp_file:
+            logs_sfp_file.write(f"logs when sfp removed for last {period} day period\n\n\n")
+            for i in sfp_is_removed:
+                logs_sfp_file.write(f"{i}\n")
+
+    if hi_sev_logs_list:
+        print(f"NOTE: check {hi_sev_logs} file")
+        with open(hi_sev_logs, "w") as hi_sev_logs_file:
+            hi_sev_logs_file.write(f"high severity logs for last {period} day period\n\n\n")
+            for i in hi_sev_logs_list:
+                hi_sev_logs_file.write(f"{i}\n")
+
     conn_msg_file.close()
     device_info_file.close()
     last_logs_summary_file.close()
-    logs_sfp_file.close()
-    hi_sev_logs_file.close()
 
     if license_error:
         license_error_logs = log_folder / f"{current_time}_license_error_logs.txt"
@@ -293,6 +302,9 @@ def fn_export_last_logs_summary(device):
 
     output.append(device.bad_logs_qnt)
     output.append(summary)
+    output.append(device.all_logs_qnt)
+    output.append(device.buffer_size)
+    
     output_str = ",".join((str(i) for i in output))
 
     return output_str
@@ -332,7 +344,9 @@ def fn_count_logs(device):
             if line != "\n" and line != "":
                 device.all_logs_qnt += 1
         else:
-            if "Log Buffer" in line: 
+            if "Log Buffer" in line:    # Log Buffer (1024000 bytes):
+                buffsize = line.split("(")[1].split(")")[0]
+                device.buffer_size = buffsize
                 buffer_matched = True
 
 
