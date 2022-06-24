@@ -111,10 +111,9 @@ def write_logs(devices, current_time, log_folder, xdays, period):
     last_logs_summary_file.write(f"summary logs for last {period} days period\n\n\n")
     last_logs_summary_file.write(f"hostname,{','.join(xdays)},bad_logs_qnt,summary,all_logs_qnt,buffer_size\n")
     
-    license_error = []
-    parity_error = []
     sfp_is_removed = []
     hi_sev_logs_list = []
+    lic_par_error = []
 
     for device in devices:
         if device.connection_status:
@@ -128,10 +127,12 @@ def write_logs(devices, current_time, log_folder, xdays, period):
             for j in device.hi_sev_logs:
                 hi_sev_logs_list.append(j)
                 
-            if "Feature Gige4portflexi 1.0 count violation" in device.show_log:
-                license_error.append(f"{device.hostname},{device.ip_address}")
-            if "parity error" in device.show_log:
-                parity_error.append(f"{device.hostname},{device.ip_address}")
+            if "Feature Gige4portflexi 1.0 count violation" in device.show_log and "parity error" in device.show_log:
+                lic_par_error.append(f"{device.hostname},{device.ip_address},lic_error,parity_error")
+            elif "Feature Gige4portflexi 1.0 count violation" in device.show_log:
+                lic_par_error.append(f"{device.hostname},{device.ip_address},lic_error,")
+            elif "parity error" in device.show_log:
+                lic_par_error.append(f"{device.hostname},{device.ip_address},,parity_error")
 
         else:
             failed_conn_count += 1
@@ -160,21 +161,14 @@ def write_logs(devices, current_time, log_folder, xdays, period):
             for i in hi_sev_logs_list:
                 hi_sev_logs_file.write(f"{i}\n")
 
-    if license_error:
-        license_error_logs = log_folder / f"{current_time}_license_error_logs.txt"
-        print(f"\nNOTE: check {license_error_logs} file")
-        with open(license_error_logs, "w") as f1:
-            f1.write("devies with license error (Feature Gige4portflexi 1.0 count violation)\n\n\n")
-            for y in license_error:
+    if lic_par_error:
+        lic_par_error_logs = log_folder / f"{current_time}_license_parity_logs.txt"
+        print(f"\nNOTE: check {lic_par_error_logs} file")
+        with open(lic_par_error_logs, "w") as f1:
+            f1.write("devies with license and parity errors\n\n\n")
+            f1.write("hostname,ip,lic_error,parity_error\n")
+            for y in lic_par_error:
                 f1.write(f"{y}\n")
-
-    if parity_error:
-        parity_error_logs = log_folder / f"{current_time}_parity_error_logs.txt"
-        print(f"\nNOTE: check {parity_error_logs} file")
-        with open(parity_error_logs, "w") as f2:
-            f2.write("devies with parity error (parity error)\n\n\n")
-            for z in parity_error:
-                f2.write(f"{z}\n")
 
     if all([i.connection_status is True for i in devices]):
         conn_msg.unlink()
